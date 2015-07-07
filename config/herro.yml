@@ -1,0 +1,28 @@
+base:
+  error: 'Kantox::Exceptions::StandardError'
+  stack: 20
+
+log:
+  terminal: 80
+  nested: 7
+  backtrace:
+    len: 8
+    skip: 3
+  colors:
+    info:
+      label: '01;38;05;21'
+      text: '01;38;05;110'
+    highlight: '01;38;05;51'
+    exception: '01;38;05;88'
+    application: '01;38;05;253'
+    method: '01;38;05;253'
+
+  symbols:
+    info: '✔'
+
+spitters:
+  airbrake:
+    active: true
+    signature: 'Airbrake.notify'
+    sender: 'error_class'
+    message: 'error_message'
