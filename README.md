@@ -1,8 +1,33 @@
 # Kantox::Herro
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/kantox/herro`. To experiment with that code, run `bin/console` for an interactive prompt.
+```ruby
+it 'has a version number' do
+  expect(Kantox::Herro::VERSION).not_to be nil
+end
 
-TODO: Delete this and the text above, and describe your gem
+it 'loads config properly' do
+  expect(Kantox::Herro.config.base!.stack).to eq(20)
+end
+
+it 'logs out the exception' do
+  Kantox::LOGGER.err ArgumentError.new('I am an Argument Error'), 5
+
+  Kantox::LOGGER.wrn 'I am a WARNING'
+  Kantox::LOGGER.err 'I am an ERROR'
+  Kantox::LOGGER.nfo 'I am an INFO'
+  Kantox::LOGGER.dbg 'I am a DEBUG'
+
+  Kantox::LOGGER.wrn ['I am a WARNING WITH TRACE']
+  Kantox::LOGGER.err ['I am an ERROR WITH TRACE']
+  Kantox::LOGGER.nfo ['I am an INFO WITH TRACE']
+  Kantox::LOGGER.dbg ['I am a DEBUG WITH TRACE']
+end
+
+it 'reports errors properly' do
+  expect {Kantox::Herro::Reporter.error 'Hey there'}.to raise_error(StandardError)
+  expect {Kantox.error ArgumentError.new('I am an Argument Error')}.to raise_error(ArgumentError)
+end
+```
 
 ## Installation
 
@@ -22,7 +47,13 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+  # Write log message, throw wrapped into `ReportedError` original exception:
+  Kantox.error ArgumentError.new('I am an Argument Error')
+
+  # Write log message including stack trace, return clean formatted text:
+  formatted = Kantox::LOGGER.wrn ['Warning']
+```
 
 ## Development
 
@@ -38,4 +69,3 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/[USERN
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-

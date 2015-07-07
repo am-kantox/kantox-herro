@@ -24,8 +24,12 @@ describe Kantox::Herro do
   end
 
   it 'reports errors properly' do
-    expect {Kantox::Herro::Reporter.yo 'Hey there'}.to raise_error(StandardError)
-    expect {Kantox::Herro::Reporter.yo ArgumentError.new('I am an Argument Error')}.to raise_error(ArgumentError)
+    expect {Kantox::Herro::Reporter.error 'Hey there'}.to raise_error(Kantox::Herro::ReportedError)
+    expect {Kantox.error ArgumentError.new('I am an Argument Error')}.to raise_error(Kantox::Herro::ReportedError)
   end
 
+  it 'returns readable message' do
+    msg = Kantox::LOGGER.wrn(['I am a WARNING WITH TRACE'])
+    puts "Readable message: #{msg}"
+  end
 end
