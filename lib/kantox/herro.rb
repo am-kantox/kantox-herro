@@ -11,6 +11,17 @@ module Kantox
     include Kungfuig
     config('config/herro.yml')
   end
+
+  class HackMiddlewareSettings
+    def initialize(app, logger)
+      @app, @logger = app, logger
+    end
+
+    def call(env)
+      env['rack.errors'] = Rails.logger.instance_variable_get(:@logger).instance_variable_get(:@log_dest)
+      @app.call(env)
+    end
+  end
 end
 
 require 'kantox/herro/monkeypatches'

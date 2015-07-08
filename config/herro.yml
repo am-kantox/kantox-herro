@@ -3,7 +3,8 @@ base:
   stack: 20
 
 log:
-  terminal: 80
+  pretty: true
+
   nested: 7
   backtrace:
     len: 8

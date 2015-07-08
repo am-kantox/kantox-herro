@@ -1,10 +1,12 @@
 require 'logger'
+require 'io/console'
 
 module Kantox
   module Herro
     class Log
-      TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || 80
+      rows, columns = $stdin.winsize
       NESTED_OFFSET = Kantox::Herro.config.log!.nested || 30
+      TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || columns - NESTED_OFFSET
       BACKTRACE_LENGTH = Kantox::Herro.config.log!.backtrace!.len || 10
       BACKTRACE_SKIP = Kantox::Herro.config.log!.backtrace!.skip || 5
 
@@ -34,28 +36,12 @@ module Kantox
 
       STOPWORDS = Kantox::Herro.config.log!.stopwords.map(&Regexp.method(:new)) || []
 
-      attr_reader :tty, :logger
-
       def initialize log = nil
-        @logger, @log = case
-                        when log then [log, log]
-                        when Kernel.const_defined?('::Rails')
-                          l = Kernel.const_get('::Rails')
-                          [ l, l.instance_variable_get(:@logger).instance_variable_get(:@log) ]
-                        else
-                          l = Logger.new($stdout)
-                          [l, l]
-                        end
-        @tty = @log.respond_to?(:tty?) && @log.tty? ||
-               (l = @log.instance_variable_get(:@logdev)
-                        .instance_variable_get(:@dev)) && l.tty? ||
-               Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.development?
+        ensure_logger(log) if log
+      end
 
-        @formatter = @log.formatter
-        @log.formatter = proc do |severity, datetime, progname, message|
-          return nil if STOPWORDS.any? { |sw| message =~ sw }
-          prepare_for_log message, severity, datetime, BACKTRACE_SKIP
-        end
+      def logger
+        ensure_logger
       end
 
       %i(warn info error debug).each do |m|
@@ -74,6 +60,33 @@ module Kantox
 
     private
 
+      def ensure_logger log = nil
+        return @logger if @logger
+
+        @logger, @log = case
+                        when log then [log, log]
+                        when Kernel.const_defined?('::Rails')
+                          l = Kernel.const_get('::Rails').logger
+                          [ l, l.instance_variable_get(:@logger).instance_variable_get(:@log) ]
+                        else
+                          l = Logger.new($stdout)
+                          [l, l]
+                        end
+        @tty = @log.respond_to?(:tty?) && @log.tty? ||
+               (l = @log.instance_variable_get(:@logdev)
+                        .instance_variable_get(:@dev)) && l.tty? ||
+               Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.development?
+
+        @formatter = @log.formatter
+        @log.formatter = proc do |severity, datetime, progname, message|
+          prepare_for_log(message, severity, datetime, BACKTRACE_SKIP) \
+            unless message.is_a?(String) && message.strip.empty? || STOPWORDS.any? { |sw| message =~ sw }
+        end if Kantox::Herro.config.log!.pretty &&
+                !(Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.production?)
+
+        @logger
+      end
+
       def clrz txt, clr
         return txt unless @tty
 
@@ -88,7 +101,7 @@ module Kantox
 
       def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP
         case what
-        when Exception then log_exception what, severity, datetime, skip
+        when Exception then log_exception what, severity, datetime, skip + 2
         when Array then log_with_trace what.first, severity, datetime, skip
         else log_string what, severity
         end
