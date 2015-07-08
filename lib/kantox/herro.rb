@@ -13,12 +13,26 @@ module Kantox
   end
 
   class HackMiddlewareSettings
+    MAXREADLEN = 2048
+
     def initialize(app, logger)
       @app, @logger = app, logger
+      @rp, @wp = IO.pipe
+
+      Thread.new do
+        loop do
+          begin
+            Kantox::LOGGER.warn @rp.read_nonblock(MAXREADLEN)
+          rescue IO::WaitReadable
+            IO.select([@rp])
+            retry
+          end
+        end
+      end
     end
 
     def call(env)
-      env['rack.errors'] = Rails.logger.instance_variable_get(:@logger).instance_variable_get(:@log_dest)
+      IO.select(nil, [env['rack.errors'] = @wp])
       @app.call(env)
     end
   end
