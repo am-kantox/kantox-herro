@@ -10,7 +10,7 @@ describe Kantox::Herro do
   end
 
   it 'logs out the exception' do
-    Kantox::LOGGER.err ArgumentError.new('I am an Argument Error'), 5
+    Kantox::LOGGER.err ArgumentError.new('I am an Argument Error')
 
     Kantox::LOGGER.wrn 'I am a WARNING'
     Kantox::LOGGER.err 'I am an ERROR'

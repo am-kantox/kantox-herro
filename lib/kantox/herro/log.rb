@@ -51,17 +51,18 @@ module Kantox
                         .instance_variable_get(:@dev)) && l.tty? ||
                Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.development?
 
+        @formatter = @log.formatter
         @log.formatter = proc do |severity, datetime, progname, message|
-          message unless STOPWORDS.any? { |sw| message =~ sw }
+          return nil if STOPWORDS.any? { |sw| message =~ sw }
+          prepare_for_log message, severity, datetime, BACKTRACE_SKIP
         end
       end
 
       %i(warn info error debug).each do |m|
         class_eval "
           def #{m} what, skip = BACKTRACE_SKIP
-            prepare_for_log(what, '#{m.upcase}', nil, skip).tap do |prepared|
-              logger.#{m}(prepared)
-            end
+            logger.#{m} what
+            prepare_for_log what, '#{m}'.upcase, nil, skip
           end
         "
       end
@@ -168,5 +169,5 @@ module Kantox
       end
     end
   end
-  LOGGER = Herro::Log.new
+  LOGGER = Herro::Log.new unless Kernel.const_defined?('::Rails')
 end
