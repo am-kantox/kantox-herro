@@ -3,12 +3,12 @@ require 'kantox/herro/log'
 module Kantox
   module Herro
     class ReportedError < ::StandardError
-      def initialize msg, cause = nil
-        super msg
-        set_backtrace (@cause = cause) && @cause.backtrace || caller(1)
-      end
-      def cause
-        @cause
+      attr_accessor :cause, :info
+      def initialize msg = nil, cause = nil, info = nil, skip = 1
+        @cause = cause
+        @info = info
+        super(msg || @cause && @cause.message || 'Reported error')
+        set_backtrace(@cause && @cause.backtrace || caller(skip))
       end
     end
     class Reporter
@@ -29,7 +29,7 @@ module Kantox
       end
       private :initialize
 
-      def self.error cause, except = [:all]
+      def self.error cause, except = [:all], wrap = true, skip = 2
         message = Kantox::LOGGER.err((inst = Reporter.new(cause)).cause, 6)
         inst.extended = message
 
@@ -47,11 +47,11 @@ module Kantox
             Kantox::LOGGER.warn ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e), 5
           end
         end
-        raise ReportedError.new(inst.cause)
+        raise wrap ? ReportedError.new(nil, inst.cause, skip) : inst.cause
       end
     end
   end
-  def self.error cause, except = [:all]
-    Kantox::Herro::Reporter.error cause, except
+  def self.error cause, except = [:all], wrap = true
+    Kantox::Herro::Reporter.error cause, except, wrap, 3
   end
 end

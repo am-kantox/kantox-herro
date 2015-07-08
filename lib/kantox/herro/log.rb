@@ -61,7 +61,7 @@ module Kantox
           def #{m} what, skip = BACKTRACE_SKIP
             prepare_for_log(what, '#{m.upcase}', nil, skip).tap do |prepared|
               logger.#{m}(prepared)
-            end.gsub(/\\e\\[.*?m/, '')
+            end
           end
         "
       end
