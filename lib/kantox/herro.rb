@@ -36,6 +36,7 @@ module Kantox
       @app.call(env)
     end
   end
+
 end
 
 require 'kantox/herro/monkeypatches'

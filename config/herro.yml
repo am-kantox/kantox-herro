@@ -3,7 +3,12 @@ base:
   stack: 20
 
 log:
-  pretty: true
+  formatters:
+    production: 'default'
+    development: 'pretty'
+    staging: 'default'
+    test: 'default'
+    standalone: 'pretty'
 
   nested: 7
   backtrace:

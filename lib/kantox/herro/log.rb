@@ -36,6 +36,10 @@ module Kantox
 
       STOPWORDS = Kantox::Herro.config.log!.stopwords.map(&Regexp.method(:new)) || []
 
+      FORMATTER = Kantox::Herro.config.log!.formatters![
+        Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.to_sym] ||
+        Kantox::Herro.config.log!.formatters![:standalone] || 'default'
+
       def initialize log = nil
         ensure_logger(log) if log
       end
@@ -78,11 +82,24 @@ module Kantox
                Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.development?
 
         @formatter = @log.formatter
-        @log.formatter = proc do |severity, datetime, progname, message|
-          prepare_for_log(message, severity, datetime, BACKTRACE_SKIP) \
-            unless message.is_a?(String) && message.strip.empty? || STOPWORDS.any? { |sw| message =~ sw }
-        end if Kantox::Herro.config.log!.pretty &&
-                !(Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.production?)
+        case FORMATTER
+        when 'default' then # do nothing
+        when 'extended'
+          @log.formatter = proc do |severity, datetime, progname, message|
+            message += " [this is a stub]"  # FIXME add significant info
+            @formatter.call severity, datetime, progname, message
+          end
+        when 'pretty'
+          @log.formatter = proc do |severity, datetime, progname, message|
+            prepare_for_log(message, severity, datetime, BACKTRACE_SKIP) \
+              unless message.is_a?(String) && message.strip.empty? || STOPWORDS.any? { |sw| message =~ sw }
+          end
+        when 'filtered'
+          @log.formatter = proc do |severity, datetime, progname, message|
+            @formatter.call severity, datetime, progname, message unless STOPWORDS.any? { |sw| message =~ sw }
+          end
+        else # do nothing
+        end
 
         @logger
       end
