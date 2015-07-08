@@ -32,6 +32,8 @@ module Kantox
       APPDIR_COLOR = SEV_COLORS_DEF.root || '01;38;05;253'
       METHOD_COLOR = SEV_COLORS_DEF[:method] || '01;38;05;253'
 
+      STOPWORDS = Kantox::Herro.config.log!.stopwords.map(&Regexp.method(:new)) || []
+
       attr_reader :tty, :logger
 
       def initialize log = nil
@@ -49,7 +51,9 @@ module Kantox
                         .instance_variable_get(:@dev)) && l.tty? ||
                Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').env.development?
 
-        @log.formatter = proc { |severity, datetime, progname, message| message }
+        @log.formatter = proc do |severity, datetime, progname, message|
+          message unless STOPWORDS.any? { |sw| message =~ sw }
+        end
       end
 
       %i(warn info error debug).each do |m|

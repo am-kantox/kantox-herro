@@ -8,6 +8,7 @@ log:
   backtrace:
     len: 8
     skip: 3
+
   colors:
     info:
       label: '01;38;05;21'
@@ -19,6 +20,9 @@ log:
 
   symbols:
     info: '✔'
+
+  stopwords:
+    - '^Message to be suppressed'
 
 spitters:
   airbrake:
