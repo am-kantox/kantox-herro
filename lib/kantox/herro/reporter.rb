@@ -32,7 +32,7 @@ module Kantox
       end
       private :initialize
 
-      def self.error cause, except = [:all], wrap = true, skip = 2, **extended
+      def self.error cause, except: [:all], wrap: true, skip: 2, **extended
         Kantox::LOGGER.err((inst = Reporter.new(cause, wrap, **extended)).cause, 6)
 
         SPITTERS.each do |name, handlers|
@@ -55,7 +55,8 @@ module Kantox
     end
   end
 
-  def self.error cause, except = [:all], wrap = true, **extended
-    Kantox::Herro::Reporter.error cause, except, wrap, 3, **extended
+  def self.error cause, except: [:all], wrap: true, **extended
+#    binding.pry
+    Kantox::Herro::Reporter.error cause, except: except, wrap: wrap, skip: 3, **extended
   end
 end
