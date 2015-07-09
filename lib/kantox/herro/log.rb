@@ -33,6 +33,8 @@ module Kantox
       EXCEPTION_COLOR = SEV_COLORS_DEF.exception || '01;38;05;88'
       APPDIR_COLOR = SEV_COLORS_DEF.root || '01;38;05;253'
       METHOD_COLOR = SEV_COLORS_DEF[:method] || '01;38;05;253'
+      DATETIME_COLOR = SEV_COLORS_DEF.datetime || '01;38;05;238'
+      EXTENDED_COLOR = SEV_COLORS_DEF.extended || '01;38;05;238'
 
       STOPWORDS = Kantox::Herro.config.log!.stopwords.map(&Regexp.method(:new)) || []
 
@@ -54,9 +56,9 @@ module Kantox
 
       %i(warn info error debug).each do |m|
         class_eval "
-          def #{m} what, skip = BACKTRACE_SKIP, datetime = nil
-            logger.#{m} what
-            prepare_for_log what, '#{m}'.upcase, datetime, skip
+          def #{m} what, skip = BACKTRACE_SKIP, datetime = nil, **extended
+            logger.#{m} what.is_a?(String) ? what + format_extended(extended) : what
+            prepare_for_log what, '#{m}'.upcase, datetime, skip, **extended
           end
         "
       end
@@ -115,16 +117,17 @@ module Kantox
                       .gsub(/⟨(.*?)⟩/, "\e[#{EXCEPTION_COLOR}m\\1\e[#{clr}m")
                       .gsub(/⟦(.*?)⟧/, "\e[#{APPDIR_COLOR}m\\1\e[#{clr}m")
                       .gsub(/⟬(.*?)⟭/, "\e[#{METHOD_COLOR}m\\1\e[#{clr}m")
+                      .gsub(/⟪(.*?)⟫/, "\e[#{EXTENDED_COLOR}m\\1\e[#{clr}m")
 
 
         "\e[#{clr}m#{txt}\e[0m"
       end
 
-      def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP
+      def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP, **extended
         case what
-        when Exception then log_exception what, severity, datetime, skip + 2
-        when Array then log_with_trace what.first, severity, datetime, skip
-        else log_string what.to_s.strip, severity, datetime
+        when Exception then log_exception what, severity, datetime, skip + 2, **extended
+        when Array then log_with_trace what.first, severity, datetime, skip, **extended
+        else log_string what.to_s.strip, severity, datetime, **extended
         end
       end
 
@@ -163,40 +166,53 @@ module Kantox
         "#{just << ''.ljust(TERMINAL_WIDTH, sym)}"
       end
 
+      def format_extended extended
+        if extended.empty?
+          ''
+        else
+          '' << delim << just << extended.map do |k, v|
+            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? v.to_s : '✗') << '⟧'
+          end.join(just) << delim
+        end
+      end
+
       def format_exception e, skip
         pe = preen_exception e, skip
 
-        "Exception: ⟨#{pe[:causes].map(&:class).join(' ⇒ ')}⟩ |" \
-          << delim \
+        extended = e.respond_to?(:extended) && e.extended ? format_extended(e.extended) : ''
+
+        "Exception: ⟨#{pe[:causes].map(&:class).join(' ⇒ ')}⟩ |"                       \
+          << delim                                                                     \
           << just << pe[:causes].map { |c| "⟨#{c.class}⟩ :: #{c.message}" }.join(just) \
-          << delim \
-          << just << pe[:backtrace].join(just) \
-          << just << "[#{pe[:omitted]} more]".rjust(TERMINAL_WIDTH, '.') \
-          << just << ''.ljust(TERMINAL_WIDTH, '=')
+          << delim                                                                     \
+          << just << pe[:backtrace].join(just)                                         \
+          << just << "[#{pe[:omitted]} more]".rjust(TERMINAL_WIDTH, '.')               \
+          << extended                                                                  \
+          << delim
       end
 
-      def log_exception e, severity, datetime, skip
-        log_string format_exception(e, skip), severity, datetime
+      def log_exception e, severity, datetime, skip, **extended
+        log_string format_exception(e, skip), severity, datetime, **extended
       end
 
-      def log_with_trace s, severity, datetime, skip
+      def log_with_trace s, severity, datetime, skip, **extended
         bt = caller(skip)
         pbt = preen_backtrace bt
         with_bt = s \
                   << delim \
                   << just << pbt.join(just) \
                   << just << "[#{bt.size - pbt.size} more]".rjust(TERMINAL_WIDTH, '.') \
-                  << just << ''.ljust(TERMINAL_WIDTH, '=')
-        log_string with_bt, severity, datetime
+                  << delim
+        log_string with_bt, severity, datetime, **extended
       end
 
-      def log_string s, severity, datetime = nil
+      def log_string s, severity, datetime = nil, **extended
         datetime ||= Time.now
         severity = ::Logger::SEV_LABEL[severity] if Integer === severity
         '' << clrz("#{SEV_SYMBOLS[severity]} ", SEV_COLORS[severity].first)    \
                << clrz(severity[0..2], SEV_COLORS[severity].first)             \
                << ' | '                                                        \
-               << clrz(datetime.strftime('%Y%m%d-%H%M%S.%3N'), '01;38;05;238') \
+               << clrz(datetime.strftime('%Y%m%d-%H%M%S.%3N'), DATETIME_COLOR) \
                << ' | '                                                        \
                << clrz(s, SEV_COLORS[severity].last)                           \
                << "\n"
