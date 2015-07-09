@@ -48,11 +48,15 @@ module Kantox
         ensure_logger
       end
 
+      def format what
+        prepare_for_log what
+      end
+
       %i(warn info error debug).each do |m|
         class_eval "
-          def #{m} what, skip = BACKTRACE_SKIP
+          def #{m} what, skip = BACKTRACE_SKIP, datetime = nil
             logger.#{m} what
-            prepare_for_log what, '#{m}'.upcase, nil, skip
+            prepare_for_log what, '#{m}'.upcase, datetime, skip
           end
         "
       end
@@ -120,7 +124,7 @@ module Kantox
         case what
         when Exception then log_exception what, severity, datetime, skip + 2
         when Array then log_with_trace what.first, severity, datetime, skip
-        else log_string what, severity
+        else log_string what.to_s.strip, severity, datetime
         end
       end
 
@@ -171,11 +175,11 @@ module Kantox
           << just << ''.ljust(TERMINAL_WIDTH, '=')
       end
 
-      def log_exception e, severity = Logger::INFO, datetime, skip
+      def log_exception e, severity, datetime, skip
         log_string format_exception(e, skip), severity, datetime
       end
 
-      def log_with_trace s, severity = Logger::INFO, datetime, skip
+      def log_with_trace s, severity, datetime, skip
         bt = caller(skip)
         pbt = preen_backtrace bt
         with_bt = s \
@@ -186,7 +190,7 @@ module Kantox
         log_string with_bt, severity, datetime
       end
 
-      def log_string s, severity = Logger::INFO, datetime = nil
+      def log_string s, severity, datetime = nil
         datetime ||= Time.now
         severity = ::Logger::SEV_LABEL[severity] if Integer === severity
         '' << clrz("#{SEV_SYMBOLS[severity]} ", SEV_COLORS[severity].first)    \

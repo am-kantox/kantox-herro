@@ -11,7 +11,13 @@ module Kantox
     include Kungfuig
     config('config/herro.yml')
   end
+end
 
+require 'kantox/herro/monkeypatches'
+require 'kantox/herro/log'
+require 'kantox/herro/reporter'
+
+module Kantox
   class HackMiddlewareSettings
     MAXREADLEN = 2048
 
@@ -36,9 +42,4 @@ module Kantox
       @app.call(env)
     end
   end
-
 end
-
-require 'kantox/herro/monkeypatches'
-require 'kantox/herro/log'
-require 'kantox/herro/reporter'
