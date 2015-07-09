@@ -46,7 +46,7 @@ module Kantox
             instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => '#{message}')"
             Kantox::LOGGER.debug "Reported “«#{inst.cause.message}»” to «#{name}»"
           rescue => e
-            Kantox::LOGGER.warn ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e), 5
+            Kantox::LOGGER.debug ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e), 5
           end
         end
 

@@ -71,7 +71,7 @@ module Kantox
     private
 
       def ensure_logger log = nil
-        return @logger if @logger
+        return @log if @log
 
         @logger, @log = case
                         when log then [log, log]
@@ -172,7 +172,7 @@ module Kantox
         else
           '' << delim << just << extended.map do |k, v|
             '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? v.to_s : '✗') << '⟧'
-          end.join(just) << delim
+          end.join(just)
         end
       end
 
