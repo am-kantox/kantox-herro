@@ -107,7 +107,7 @@ module Kantox
         else # do nothing
         end
 
-        @logger
+        @log
       end
 
       def clrz txt, clr
