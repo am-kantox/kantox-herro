@@ -56,7 +56,7 @@ module Kantox
       %i(warn info error debug).each do |m|
         class_eval "
           def #{m} what, skip = BACKTRACE_SKIP, datetime = nil, **extended
-            logger.#{m} what.is_a?(String) ? what + format_extended(extended) : what
+            logger.#{m} what.is_a?(String) ? preen_string(what.strip) + format_extended(extended) : what
             prepare_for_log what, '#{m}'.upcase, datetime, skip, **extended
           end
         "
@@ -131,7 +131,7 @@ module Kantox
         case what
         when Exception then log_exception what, severity, datetime, skip, **extended
         when Array then log_with_trace what.first, severity, datetime, skip, **extended
-        else log_string what.to_s.strip, severity, datetime, **extended
+        else log_string preen_string(what.to_s), severity, datetime, **extended
         end
       end
 
@@ -162,6 +162,10 @@ module Kantox
         }
       end
 
+      def preen_string s
+        s.gsub /\s*\R\s*/, just
+      end
+
       def just offset = NESTED_OFFSET, sym = ' '
         "#{$/}⮩ #{sym * (offset - 2)}"
       end
@@ -188,7 +192,7 @@ module Kantox
 
         "Exception: ⟨#{pe[:causes].map(&:class).join(' ⇒ ')}⟩ |"                       \
           << delim                                                                     \
-          << just << pe[:causes].map { |c| "⟨#{c.class}⟩ :: #{c.message}" }.join(just) \
+          << just << pe[:causes].map { |c| "⟨#{c.class}⟩ :: #{preen_string c.message}" }.join(just) \
           << delim                                                                     \
           << just << pe[:backtrace].join(just)                                         \
           << just << "[#{pe[:omitted]} more]".rjust(TERMINAL_WIDTH, '.')               \
