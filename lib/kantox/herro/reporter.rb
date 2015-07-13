@@ -31,7 +31,7 @@ module Kantox
       end
       private :initialize
 
-      def self.error cause, status = 503, except = [:all], wrap = true, **extended
+      def self.report cause, status = 200, except = [:all], wrap = true, **extended
         Kantox::LOGGER.err((inst = Reporter.new(cause, status, wrap, **extended)).cause)
 
         SPITTERS.each do |name, handlers|
@@ -49,13 +49,19 @@ module Kantox
           end
         end
 
-        raise inst.cause
+        inst
+      end
+
+      def self.error cause, status = 503, except = [:all], wrap = true, **extended
+        raise self.report(cause, status, except, wrap, **extended).cause
       end
     end
   end
 
+  def self.report cause, except = [:all], **extended
+    Kantox::Herro::Reporter.report cause, 200, except, **extended
+  end
   def self.error cause, status = 503, except = [:all], **extended
-    # h = extended.map { |k, v| [k, "#{v}"] }.to_h
     Kantox::Herro::Reporter.error cause, status, except, **extended
   end
 end
