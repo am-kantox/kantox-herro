@@ -33,6 +33,6 @@ describe Kantox::Herro do
 
   it 'converts console colors to html' do
     str = "\e[01;38;05;21mHello\e[0m, \e[04;38;05;156mworld!\e[0m"
-    expect(str.console_to_html).to eq ("<div style='background-color: black;'><b><span style='color: #0000ff;'>Hello</span></b>, <u><span style='color: #99ff66;'>world!</span></u></div>")
+    expect(str.console_to_html).to eq ("<div style=\"background-color:#080820;padding:1em;\"><b><span style='color: #0000ff;'>Hello</span></b>, <u><span style='color: #99ff66;'>world!</span></u></div>")
   end
 end

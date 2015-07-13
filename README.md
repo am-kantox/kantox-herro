@@ -1,32 +1,37 @@
 # Kantox::Herro
 
 ```ruby
-it 'has a version number' do
-  expect(Kantox::Herro::VERSION).not_to be nil
-end
-
-it 'loads config properly' do
-  expect(Kantox::Herro.config.base!.stack).to eq(20)
-end
-
 it 'logs out the exception' do
   Kantox::LOGGER.err ArgumentError.new('I am an Argument Error'), 5
 
   Kantox::LOGGER.wrn 'I am a WARNING'
-  Kantox::LOGGER.err 'I am an ERROR'
-  Kantox::LOGGER.nfo 'I am an INFO'
-  Kantox::LOGGER.dbg 'I am a DEBUG'
-
-  Kantox::LOGGER.wrn ['I am a WARNING WITH TRACE']
-  Kantox::LOGGER.err ['I am an ERROR WITH TRACE']
   Kantox::LOGGER.nfo ['I am an INFO WITH TRACE']
-  Kantox::LOGGER.dbg ['I am a DEBUG WITH TRACE']
-end
+  Kantox::LOGGER.wrn 'I am a WARNING', user: 'Aleksei', ip: '8.8.8.8'
+  Kantox::LOGGER.err 'I am an ERROR'
 
-it 'reports errors properly' do
-  expect {Kantox::Herro::Reporter.error 'Hey there'}.to raise_error(StandardError)
-  expect {Kantox.error ArgumentError.new('I am an Argument Error')}.to raise_error(ArgumentError)
-end
+  Kantox::LOGGER.nfo ['I am an INFO WITH TRACE'], user: 'Aleksei', ip: '8.8.8.8'
+  Kantox::LOGGER.dbg ['I am a DEBUG WITH TRACE']
+  end
+
+  it 'reports errors properly' do
+    expect {Kantox.error 'Hey there'}.to raise_error(Kantox::Herro::ReportedError)
+  end
+
+  it 'raises errors properly in rails' do
+    begin
+      @comment = CreateComment.run!(comment_params)
+      render json: @comment.to_json(only: %i[comment created_at id],
+                                    methods: :user_email,
+                                    root: false)
+    rescue  Mutations::ValidationException,
+          ActiveRecord::ActiveRecordError,
+          Workflow::TransitionHalted,
+          Exception
+
+      trumpet_error $!, 406, comment: params[:comment],
+                             commentable: @commentable.id
+    end
+  end
 ```
 
 ## Installation
@@ -53,6 +58,11 @@ Or install it yourself as:
 
   # Write log message including stack trace, return clean formatted text:
   formatted = Kantox::LOGGER.wrn ['Warning']
+
+  # rails, inside rescue clause:
+  trumpet_error $!, 503, param: params[:param],
+                         email: surrent_user.email
+
 ```
 
 ## Development
