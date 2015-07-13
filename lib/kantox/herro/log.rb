@@ -134,7 +134,7 @@ module Kantox
       def preen_backtrace backtrace_or_caller
         backtrace_or_caller.map.with_index do |bt, idx|
           if idx < BACKTRACE_LENGTH || bt =~ /^#{APP_ROOT}/
-            "[#{idx.to_s.rjust(3, ' ')}] " << \
+            "[#{idx.to_s.rjust(3, ' ')}] " << \
               bt.gsub(/^(#{APP_ROOT}[^:]*):(\d+):/, "⟦\\1⟧:⟦\\2⟧: ")
                 .gsub(/`(.*?)'/, "⟬\\1⟭")
           else
@@ -158,7 +158,7 @@ module Kantox
         }
       end
 
-      def just offset = NESTED_OFFSET, sym = ' '
+      def just offset = NESTED_OFFSET, sym = ' '
         "#{$/}⮩ #{sym * (offset - 2)}"
       end
 
@@ -172,7 +172,7 @@ module Kantox
         else
           '' << delim << just << extended.map do |k, v|
             # FIXME expand extended
-            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? "#{v}" : '✗') << '⟧'
+            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? "#{v}" : '✗') << '⟧'
           end.join(just) << delim
         end
       end

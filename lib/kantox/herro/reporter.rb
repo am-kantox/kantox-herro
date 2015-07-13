@@ -8,10 +8,10 @@ module Kantox
         @cause = cause
         super(msg || @cause && @cause.message || 'Reported error')
         set_backtrace(@cause && @cause.backtrace || caller(skip))
-        @info = info || Kantox::LOGGER.format(self)
         @extended = {
           user: Thread.current[:user]
         }.merge extended
+        @info = info || Kantox::LOGGER.format(self)
       end
     end
     class Reporter
