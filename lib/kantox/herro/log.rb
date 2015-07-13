@@ -33,8 +33,8 @@ module Kantox
       EXCEPTION_COLOR = SEV_COLORS_DEF.exception || '01;38;05;88'
       APPDIR_COLOR = SEV_COLORS_DEF.root || '01;38;05;253'
       METHOD_COLOR = SEV_COLORS_DEF[:method] || '01;38;05;253'
-      DATETIME_COLOR = SEV_COLORS_DEF.datetime || '01;38;05;238'
-      EXTENDED_COLOR = SEV_COLORS_DEF.extended || '01;38;05;238'
+      DATETIME_COLOR = SEV_COLORS_DEF.datetime || '01;38;05;240'
+      EXTENDED_COLOR = SEV_COLORS_DEF.extended || '01;38;05;246'
 
       STOPWORDS = Kantox::Herro.config.log!.stopwords.map(&Regexp.method(:new)) || []
 
@@ -111,7 +111,7 @@ module Kantox
       end
 
       def clrz txt, clr
-        return txt unless @tty
+        return txt unless @tty && (!Kernel.const_defined?('::Rails') || Kernel.const_get('::Rails').env.development?)
 
         txt = "#{txt}".gsub(/«(.*?)»/, "\e[#{HIGHLIGHT_COLOR}m\\1\e[#{clr}m")
                       .gsub(/⟨(.*?)⟩/, "\e[#{EXCEPTION_COLOR}m\\1\e[#{clr}m")

@@ -9,9 +9,7 @@ module Kantox
         @status = status
         super(msg || @cause && @cause.message || 'Reported error')
         set_backtrace(@cause && @cause.backtrace || caller(skip))
-        @extended = {
-          user: Thread.current[:user]
-        }.merge extended
+        @extended = extended
         @info = info || Kantox::LOGGER.format(self)
       end
     end
