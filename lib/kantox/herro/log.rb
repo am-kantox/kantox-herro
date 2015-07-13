@@ -113,11 +113,11 @@ module Kantox
       def clrz txt, clr
         return txt unless @tty && (!Kernel.const_defined?('::Rails') || Kernel.const_get('::Rails').env.development?)
 
-        txt = "#{txt}".gsub(/«(.*?)»/, "\e[#{HIGHLIGHT_COLOR}m\\1\e[#{clr}m")
-                      .gsub(/⟨(.*?)⟩/, "\e[#{EXCEPTION_COLOR}m\\1\e[#{clr}m")
-                      .gsub(/⟦(.*?)⟧/, "\e[#{APPDIR_COLOR}m\\1\e[#{clr}m")
-                      .gsub(/⟬(.*?)⟭/, "\e[#{METHOD_COLOR}m\\1\e[#{clr}m")
-                      .gsub(/⟪(.*?)⟫/, "\e[#{EXTENDED_COLOR}m\\1\e[#{clr}m")
+        txt = "#{txt}".gsub(/«(.*?)»/m, "\e[#{HIGHLIGHT_COLOR}m\\1\e[#{clr}m")
+                      .gsub(/⟨(.*?)⟩/m, "\e[#{EXCEPTION_COLOR}m\\1\e[#{clr}m")
+                      .gsub(/⟦(.*?)⟧/m, "\e[#{APPDIR_COLOR}m\\1\e[#{clr}m")
+                      .gsub(/⟬(.*?)⟭/m, "\e[#{METHOD_COLOR}m\\1\e[#{clr}m")
+                      .gsub(/⟪(.*?)⟫/m, "\e[#{EXTENDED_COLOR}m\\1\e[#{clr}m")
 
 
         "\e[#{clr}m#{txt}\e[0m"
