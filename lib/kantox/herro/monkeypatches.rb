@@ -1,7 +1,9 @@
 module Kantox
   module Herro
     def self.console_to_html s
-      fmt = s.gsub(/\R/, '<br>').gsub(/\e\[([\d;]+)m(.*?)\e\[([\d;]+)m/m) do |m|
+      fmt = s.gsub(/[<>&]/, {'<' => '❬','>' => '❭','&' => '﹠'})
+             .gsub(/\R/, '<br>')
+             .gsub(/\e\[([\d;]+)m(.*?)\e\[([\d;]+)m/m) do |m|
         opening = self.parse $1.split ';'
         text = $2
         closing = self.parse $3.split ';'
@@ -15,7 +17,7 @@ module Kantox
           "<#{tag.first}#{attr}>"
         end.join
       end
-      ["<div style='background-color: black;'>", fmt, '</div>'].join
+      ['<div style="background-color:#080820;padding:1em;">', fmt, '</div>'].join
     end
 
     class ::String

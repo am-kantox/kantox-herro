@@ -3,9 +3,10 @@ require 'kantox/herro/log'
 module Kantox
   module Herro
     class ReportedError < ::StandardError
-      attr_accessor :cause, :info, :extended
-      def initialize msg = nil, cause = nil, info = nil, skip = 1, **extended
+      attr_accessor :cause, :status, :info, :extended
+      def initialize msg = nil, cause = nil, status = 503, info = nil, skip = 1, **extended
         @cause = cause
+        @status = status
         super(msg || @cause && @cause.message || 'Reported error')
         set_backtrace(@cause && @cause.backtrace || caller(skip))
         @extended = {
@@ -22,18 +23,18 @@ module Kantox
 
       attr_reader :cause
 
-      def initialize cause, wrap = true, **extended
+      def initialize cause, status, wrap = true, **extended
         @cause =  case cause
                   when Exception then cause
                   when String then DEFAULT_ERROR.new(cause)
                   else DEFAULT_ERROR.new("#{cause}")
                   end
-        @cause = ReportedError.new("Error of type #{cause.class} occured.", @cause, **extended) if wrap
+        @cause = ReportedError.new(nil, @cause, status, **extended) if wrap
       end
       private :initialize
 
-      def self.error cause, except = [:all], wrap = true, **extended
-        Kantox::LOGGER.err((inst = Reporter.new(cause, wrap, **extended)).cause)
+      def self.error cause, status = 503, except = [:all], wrap = true, **extended
+        Kantox::LOGGER.err((inst = Reporter.new(cause, status, wrap, **extended)).cause)
 
         SPITTERS.each do |name, handlers|
           next unless handlers.active
@@ -55,8 +56,8 @@ module Kantox
     end
   end
 
-  def self.error cause, except = [:all], **extended
+  def self.error cause, status = 503, except = [:all], **extended
     # h = extended.map { |k, v| [k, "#{v}"] }.to_h
-    Kantox::Herro::Reporter.error cause, except, **extended
+    Kantox::Herro::Reporter.error cause, status, except, **extended
   end
 end
