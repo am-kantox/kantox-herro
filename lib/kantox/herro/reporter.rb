@@ -29,7 +29,7 @@ module Kantox
                   when String then DEFAULT_ERROR.new(cause)
                   else DEFAULT_ERROR.new("#{cause}")
                   end
-        @cause = ReportedError.new(nil, @cause, status, **extended) if wrap
+        @cause = ReportedError.new("Error ##{status} :: “#{@cause.message}”", @cause, status, **extended) if wrap
       end
       private :initialize
 
