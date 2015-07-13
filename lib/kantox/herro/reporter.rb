@@ -32,8 +32,8 @@ module Kantox
       end
       private :initialize
 
-      def self.error cause, except: [:all], wrap: true, skip: 2, **extended
-        Kantox::LOGGER.err((inst = Reporter.new(cause, wrap, **extended)).cause, 6)
+      def self.error cause, except = [:all], wrap = true, **extended
+        Kantox::LOGGER.err((inst = Reporter.new(cause, wrap, **extended)).cause)
 
         SPITTERS.each do |name, handlers|
           next unless handlers.active
@@ -43,10 +43,10 @@ module Kantox
           #    sender: 'error_class'
           #    message: 'error_message'
           begin
-            instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => '#{message}')"
+            instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => '#{inst.cause.message}')"
             Kantox::LOGGER.debug "Reported “«#{inst.cause.message}»” to «#{name}»"
           rescue => e
-            Kantox::LOGGER.debug ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e), 5
+            Kantox::LOGGER.debug ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e, extended)
           end
         end
 
@@ -55,8 +55,8 @@ module Kantox
     end
   end
 
-  def self.error cause, except: [:all], wrap: true, **extended
-#    binding.pry
-    Kantox::Herro::Reporter.error cause, except: except, wrap: wrap, skip: 3, **extended
+  def self.error cause, except = [:all], **extended
+    # h = extended.map { |k, v| [k, "#{v}"] }.to_h
+    Kantox::Herro::Reporter.error cause, except, **extended
   end
 end

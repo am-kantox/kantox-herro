@@ -8,7 +8,7 @@ module Kantox
       NESTED_OFFSET = Kantox::Herro.config.log!.nested || 30
       TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || columns - NESTED_OFFSET
       BACKTRACE_LENGTH = Kantox::Herro.config.log!.backtrace!.len || 10
-      BACKTRACE_SKIP = Kantox::Herro.config.log!.backtrace!.skip || 5
+      BACKTRACE_SKIP = Kantox::Herro.config.log!.backtrace!.skip || 0
 
       APP_ROOT = Kantox::Herro.config.log!.root ||
         Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').root ||
@@ -125,7 +125,7 @@ module Kantox
 
       def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP, **extended
         case what
-        when Exception then log_exception what, severity, datetime, skip + 2, **extended
+        when Exception then log_exception what, severity, datetime, skip, **extended
         when Array then log_with_trace what.first, severity, datetime, skip, **extended
         else log_string what.to_s.strip, severity, datetime, **extended
         end
@@ -171,8 +171,9 @@ module Kantox
           ''
         else
           '' << delim << just << extended.map do |k, v|
-            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? v.to_s : '✗') << '⟧'
-          end.join(just)
+            # FIXME expand extended
+            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? "#{v}" : '✗') << '⟧'
+          end.join(just) << delim
         end
       end
 
@@ -187,8 +188,7 @@ module Kantox
           << delim                                                                     \
           << just << pe[:backtrace].join(just)                                         \
           << just << "[#{pe[:omitted]} more]".rjust(TERMINAL_WIDTH, '.')               \
-          << extended                                                                  \
-          << delim
+          << extended
       end
 
       def log_exception e, severity, datetime, skip, **extended
