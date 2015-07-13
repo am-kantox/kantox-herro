@@ -4,9 +4,8 @@ require 'io/console'
 module Kantox
   module Herro
     class Log
-      rows, columns = $stdin.winsize
       NESTED_OFFSET = Kantox::Herro.config.log!.nested || 30
-      TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || columns - NESTED_OFFSET
+      TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || ($stdin.winsize.last rescue 80) - NESTED_OFFSET
       BACKTRACE_LENGTH = Kantox::Herro.config.log!.backtrace!.len || 10
       BACKTRACE_SKIP = Kantox::Herro.config.log!.backtrace!.skip || 0
 
@@ -89,7 +88,6 @@ module Kantox
 
         @formatter = @log.formatter
         case FORMATTER
-        when 'default' then # do nothing
         when 'extended'
           @log.formatter = proc do |severity, datetime, progname, message|
             message += " [this is a stub]"  # FIXME add significant info
@@ -102,7 +100,13 @@ module Kantox
           end
         when 'filtered'
           @log.formatter = proc do |severity, datetime, progname, message|
-            @formatter.call severity, datetime, progname, message unless STOPWORDS.any? { |sw| message =~ sw }
+            msg = case message
+                  when Exception then message.message
+                  when String then message
+                  else "#{message}"
+                  end.strip
+            @formatter.call(severity, datetime, progname, message) \
+              unless msg.empty? || STOPWORDS.any? { |sw| msg =~ sw }
           end
         else # do nothing
         end
