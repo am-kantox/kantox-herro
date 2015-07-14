@@ -2,6 +2,9 @@ base:
   error: 'Kantox::Exceptions::StandardError'
   stack: 20
 
+format:
+  id: '__id__'
+
 log:
   formatters:
     production: 'default'

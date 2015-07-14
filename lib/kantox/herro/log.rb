@@ -4,10 +4,17 @@ require 'io/console'
 module Kantox
   module Herro
     class Log
+      PREPENDER = :"#{Kantox::Herro.config.format!.id}"
+
+      MULTILINE = !(FalseClass === Kantox::Herro.config.log!.multiline)
+
       NESTED_OFFSET = Kantox::Herro.config.log!.nested || 30
       TERMINAL_WIDTH = Kantox::Herro.config.log!.terminal || ($stdin.winsize.last rescue 80) - NESTED_OFFSET
       BACKTRACE_LENGTH = Kantox::Herro.config.log!.backtrace!.len || 10
       BACKTRACE_SKIP = Kantox::Herro.config.log!.backtrace!.skip || 0
+
+      JUST_OFFSET = Kantox::Herro.config.log!.offsets!.justify || ' ▷ '
+      DELIM_OFFSET = Kantox::Herro.config.log!.offsets!.delimeter || ' ▶'
 
       APP_ROOT = Kantox::Herro.config.log!.root ||
         Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').root ||
@@ -56,8 +63,12 @@ module Kantox
       %i(warn info error debug).each do |m|
         class_eval "
           def #{m} what, skip = BACKTRACE_SKIP, datetime = nil, **extended
-            logger.#{m} what.is_a?(String) ? preen_string(what.strip) + format_extended(extended) : what
-            prepare_for_log what, '#{m}'.upcase, datetime, skip, **extended
+            if what.is_a?(String)
+              prefix, suffix = format_extended extended
+              what = prefix.to_s + preen_string(what.strip) + suffix
+            end
+            logger.#{m} what
+            prepare_for_log what, '#{m}'.upcase, datetime, skip
           end
         "
       end
@@ -127,11 +138,11 @@ module Kantox
         "\e[#{clr}m#{txt}\e[0m"
       end
 
-      def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP, **extended
+      def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP
         case what
-        when Exception then log_exception what, severity, datetime, skip, **extended
-        when Array then log_with_trace what.first, severity, datetime, skip, **extended
-        else log_string preen_string(what.to_s), severity, datetime, **extended
+        when Exception then log_exception what, severity, datetime, skip
+        when Array then what.each { |what| log_with_trace what, severity, datetime, skip }
+        else log_string preen_string(what.to_s), severity, datetime
         end
       end
 
@@ -167,43 +178,47 @@ module Kantox
       end
 
       def just offset = NESTED_OFFSET, sym = ' '
-        "#{$/}⮩ #{sym * (offset - 2)}"
+        MULTILINE ? "#{$/}⮩ #{sym * (offset - 2)}" : JUST_OFFSET
       end
 
       def delim sym = '—'
-        "#{just << ''.ljust(TERMINAL_WIDTH, sym)}"
+        MULTILINE ? "#{just << ''.ljust(TERMINAL_WIDTH, sym)}" : DELIM_OFFSET
       end
 
       def format_extended extended
-        if extended.empty?
-          ''
-        else
-          '' << delim << just << extended.map do |k, v|
-            # FIXME expand extended
-            '⟪' << k.to_s.rjust(NESTED_OFFSET + 13, ' ') << '⟫ | ⟦' << (v ? "#{v}" : '✗') << '⟧'
-          end.join(just) << delim
-        end
+        extended = extended.dup # FIXME This is required for subsequent processing
+        [
+          (prep = extended.delete(PREPENDER)) && "#{prep} | ",
+          if extended.empty?
+            ''
+          else
+            '' << delim << just << extended.map do |k, v|
+              # FIXME expand extended
+              '⟪' << k.to_s.rjust(MULTILINE ? NESTED_OFFSET + 13 : 0, ' ') << '⟫ | ⟦' << (v ? "#{v}" : '✗') << '⟧'
+            end.join(just) << delim
+          end
+        ]
       end
 
       def format_exception e, skip
         pe = preen_exception e, skip
 
-        extended = e.respond_to?(:extended) && e.extended ? format_extended(e.extended) : ''
+        prefix, suffix = format_extended(e.respond_to?(:extended) && e.extended || {})
 
-        "Exception: ⟨#{pe[:causes].map(&:class).join(' ⇒ ')}⟩ |"                       \
-          << delim                                                                     \
+        "#{prefix}Exception: ⟨#{pe[:causes].map(&:class).join(' ⇒ ')}⟩ |"                           \
+          << delim                                                                                  \
           << just << pe[:causes].map { |c| "⟨#{c.class}⟩ :: #{preen_string c.message}" }.join(just) \
-          << delim                                                                     \
-          << just << pe[:backtrace].join(just)                                         \
-          << just << "[#{pe[:omitted]} more]".rjust(TERMINAL_WIDTH, '.')               \
-          << extended
+          << delim                                                                                  \
+          << just << pe[:backtrace].join(just)                                                      \
+          << just << "[#{pe[:omitted]} more]".rjust(MULTILINE ? TERMINAL_WIDTH : 0, '.')            \
+          << suffix
       end
 
-      def log_exception e, severity, datetime, skip, **extended
-        log_string format_exception(e, skip), severity, datetime, **extended
+      def log_exception e, severity, datetime, skip
+        log_string format_exception(e, skip), severity, datetime
       end
 
-      def log_with_trace s, severity, datetime, skip, **extended
+      def log_with_trace s, severity, datetime, skip
         bt = caller(skip)
         pbt = preen_backtrace bt
         with_bt = s \
@@ -211,10 +226,10 @@ module Kantox
                   << just << pbt.join(just) \
                   << just << "[#{bt.size - pbt.size} more]".rjust(TERMINAL_WIDTH, '.') \
                   << delim
-        log_string with_bt, severity, datetime, **extended
+        log_string with_bt, severity, datetime
       end
 
-      def log_string s, severity, datetime = nil, **extended
+      def log_string s, severity, datetime = nil
         datetime ||= Time.now
         severity = ::Logger::SEV_LABEL[severity] if Integer === severity
         '' << clrz("#{SEV_SYMBOLS[severity]} ", SEV_COLORS[severity].first)    \
