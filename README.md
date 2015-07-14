@@ -65,6 +65,23 @@ Or install it yourself as:
 
 ```
 
+### To view logs in `vim` with pleasure
+
+    http://www.vim.org/scripts/script.php?script_id=302
+    
+To enable the above:
+
+    :AnsiEsc
+
+In your `~/.vimrc`:
+
+    " ================ Folds ============================
+    set foldmethod=expr
+    set foldexpr=getline(v:lnum)=~\"⮩\"
+    set foldnestmax=3       "deepest fold is 3 levels
+
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
