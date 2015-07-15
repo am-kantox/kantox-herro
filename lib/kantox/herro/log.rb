@@ -16,10 +16,6 @@ module Kantox
       JUST_OFFSET = Kantox::Herro.config.log!.offsets!.justify || ' ▷ '
       DELIM_OFFSET = Kantox::Herro.config.log!.offsets!.delimeter || ' ▶'
 
-      APP_ROOT = Kantox::Herro.config.log!.root ||
-        Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').root ||
-        __dir__.split(File::SEPARATOR)[0..4].join(File::SEPARATOR)
-
       SEV_COLORS_DEF = Kantox::Herro.config.log!.colors!
       SEV_COLORS = {
         'INFO'    => [SEV_COLORS_DEF.info!.label || '01;38;05;21',  SEV_COLORS_DEF.info!.text || '00;38;05;110'],
@@ -148,9 +144,9 @@ module Kantox
 
       def preen_backtrace backtrace_or_caller
         backtrace_or_caller.map.with_index do |bt, idx|
-          if idx < BACKTRACE_LENGTH || bt =~ /^#{APP_ROOT}/
+          if idx < BACKTRACE_LENGTH || bt =~ /^#{app_root}/
             "[#{idx.to_s.rjust(3, ' ')}] " << \
-              bt.gsub(/^(#{APP_ROOT}[^:]*):(\d+):/, "⟦\\1⟧:⟦\\2⟧: ")
+              bt.gsub(/^(#{app_root}[^:]*):(\d+):/, "⟦\\1⟧:⟦\\2⟧: ")
                 .gsub(/`(.*?)'/, "⟬\\1⟭")
           else
             nil
@@ -240,6 +236,13 @@ module Kantox
                << clrz(s, SEV_COLORS[severity].last)                           \
                << "\n"
       end
+
+      def app_root
+        Kantox::Herro.config.log!.root ||
+        Kernel.const_defined?('::Rails') && Kernel.const_get('::Rails').root ||
+        __dir__.split(File::SEPARATOR)[0..4].join(File::SEPARATOR)
+      end
+
     end
   end
   LOGGER = Herro::Log.new unless Kernel.const_defined?('::Rails')
