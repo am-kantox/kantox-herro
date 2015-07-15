@@ -1,5 +1,9 @@
 # Kantox::Herro
 
+Better log for Rails (and plain ruby.)
+
+![Screenshot](screenshot.png)
+
 ```ruby
 it 'logs out the exception' do
   Kantox::LOGGER.err ArgumentError.new('I am an Argument Error'), 5
