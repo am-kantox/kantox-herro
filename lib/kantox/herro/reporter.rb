@@ -42,7 +42,7 @@ module Kantox
           #    sender: 'error_class'
           #    message: 'error_message'
           begin
-            instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => '#{inst.cause.message}')"
+            instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => \%Q{#{inst.cause.message}})"
             Kantox::LOGGER.debug "Reported “«#{inst.cause.message}»” to «#{name}»"
           rescue => e
             Kantox::LOGGER.debug ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e, extended)
