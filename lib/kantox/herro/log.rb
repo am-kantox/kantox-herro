@@ -79,15 +79,17 @@ module Kantox
       def ensure_logger log = nil
         return @log if @log
 
-        @logger, @log = case
-                        when log then [log, log]
-                        when Kernel.const_defined?('::Rails')
-                          l = Kernel.const_get('::Rails').logger
-                          [ l, l.instance_variable_get(:@logger).instance_variable_get(:@log) ]
-                        else
-                          l = Logger.new($stdout)
-                          [l, l]
-                        end
+        @log =  case
+                when log then log
+                when Kernel.const_defined?('::Rails')
+                  Kernel.const_get('::Rails')
+                        .logger
+                        .instance_variable_get(:@logger)
+                        .instance_variable_get(:@log)
+                else
+                  Logger.new($stdout)
+                end
+                
         @tty = @log.respond_to?(:tty?) && @log.tty? ||
                (l = @log.instance_variable_get(:@logdev)
                         .instance_variable_get(:@dev)) && l.tty? ||

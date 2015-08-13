@@ -69,10 +69,30 @@ Or install it yourself as:
 
 ```
 
+Life example (generic handler in `application_controller.rb`):
+
+```ruby
+  def trumpet_error exception, status = 503, **extended
+    extended = {
+        __id__: request.session_options[:id],
+        ip: request.env["HTTP_X_FORWARDED_FOR"] || request.remote_ip,
+        login: (current_user.login rescue nil)
+      }.merge(
+      %i(session user client company).map do |who|
+        [who, public_send("current_#{who}")]
+      end.map do |who, value|
+        value.nil? || value.id.nil? ? nil : [who, value.id]
+      end.compact.to_h
+    ).merge(extended)
+    Kantox.error exception, status, extended
+  end
+
+```
+
 ### To view logs in `vim` with pleasure
 
     http://www.vim.org/scripts/script.php?script_id=302
-    
+
 To enable the above:
 
     :AnsiEsc
