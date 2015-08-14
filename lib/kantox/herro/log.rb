@@ -18,6 +18,7 @@ module Kantox
 
       SEV_COLORS_DEF = Kantox::Herro.config.log!.colors!
       SEV_COLORS = {
+        'FATAL'   => [SEV_COLORS_DEF.fatal!.label || '01;48;05;196',  SEV_COLORS_DEF.fatal!.text || '01;48;05;196'],
         'INFO'    => [SEV_COLORS_DEF.info!.label || '01;38;05;21',  SEV_COLORS_DEF.info!.text || '00;38;05;110'],
         'WARN'    => [SEV_COLORS_DEF.warn!.label || '01;38;05;226', SEV_COLORS_DEF.warn!.text || '00;38;05;222'],
         'ERROR'   => [SEV_COLORS_DEF.error!.label || '01;38;05;196', SEV_COLORS_DEF.error!.text || '01;38;05;174'],
@@ -25,6 +26,7 @@ module Kantox
         'ANY'     => [SEV_COLORS_DEF.any!.label || '01;38;05;222;48;05;238', SEV_COLORS_DEF.any!.text || '01;38;05;253;48;05;238']
       }
       SEV_SYMBOLS = {
+        'FATAL'   => Kantox::Herro.config.log!.symbols!.fatal || '∅',
         'INFO'    => Kantox::Herro.config.log!.symbols!.info || '✔',
         'WARN'    => Kantox::Herro.config.log!.symbols!.warn || '✗',
         'ERROR'   => Kantox::Herro.config.log!.symbols!.error || '✘',
@@ -56,7 +58,7 @@ module Kantox
         prepare_for_log what
       end
 
-      %i(warn info error debug).each do |m|
+      %i(warn info error fatal debug).each do |m|
         class_eval "
           def #{m} what, skip = BACKTRACE_SKIP, datetime = nil, **extended
             if what.is_a?(String)
@@ -68,6 +70,7 @@ module Kantox
           end
         "
       end
+      alias_method :ftl, :fatal
       alias_method :wrn, :warn
       alias_method :inf, :info
       alias_method :nfo, :info
@@ -89,7 +92,7 @@ module Kantox
                 else
                   Logger.new($stdout)
                 end
-                
+
         @tty = @log.respond_to?(:tty?) && @log.tty? ||
                (l = @log.instance_variable_get(:@logdev)
                         .instance_variable_get(:@dev)) && l.tty? ||
@@ -139,7 +142,7 @@ module Kantox
       def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP
         case what
         when Exception then log_exception what, severity, datetime, skip
-        when Array then what.each { |what| log_with_trace what, severity, datetime, skip }
+        when Array then what.map { |what| log_with_trace what, severity, datetime, skip }.join($/)
         else log_string preen_string(what.to_s), severity, datetime
         end
       end

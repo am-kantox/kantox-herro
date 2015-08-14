@@ -13,7 +13,7 @@ describe Kantox::Herro do
     Kantox::LOGGER.err ArgumentError.new('Hi! I am an Argument Error')
 
     Kantox::LOGGER.wrn 'I am a WARNING', user: 'Aleksei', ip: '8.8.8.8'
-    Kantox::LOGGER.err 'I am an ERROR'
+    Kantox::LOGGER.ftl 'I am an ERROR'
 
     Kantox::LOGGER.nfo ['I am an INFO WITH TRACE'], user: 'Aleksei', ip: '8.8.8.8'
     Kantox::LOGGER.dbg ['I am a DEBUG WITH TRACE']
