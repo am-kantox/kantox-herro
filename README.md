@@ -66,7 +66,34 @@ Or install it yourself as:
   # rails, inside rescue clause:
   trumpet_error $!, 503, param: params[:param],
                          email: surrent_user.email
+```
 
+## Rails
+
+To use herro in Rails, one introduces the initializer:
+
+**config/initializers/herro.rb**
+
+```ruby
+require 'kantox/herro'
+
+begin
+  require 'rack/cache'
+rescue LoadError => e
+  puts "Couldn't find rack-cache - make sure you have it in your Gemfile:"
+  puts "  gem 'rack-cache', :require => 'rack/cache'"
+end
+
+Kantox::Herro.config(File.join Rails.root, 'config', 'herro.yml') do |c|
+  c.log!.root = Rails.root
+end
+# In current version this should be done after initialization (⇑)
+#     to reflect `Rails.logger`
+Kantox::LOGGER = Kantox::Herro::Log.new
+
+if Kantox::Herro.config.log!.rack
+  Rails.application.middleware.insert_before Rack::Cache, Kantox::HackMiddlewareSettings, :kantox_web
+end
 ```
 
 Life example (generic handler in `application_controller.rb`):
