@@ -1,5 +1,7 @@
 # Kantox::Herro
 
+[![Build Status](https://travis-ci.org/am-kantox/kantox-herro.svg\?branch\=master)](https://travis-ci.org/am-kantox/kantox-herro)
+
 Better log for Rails (and plain ruby.)
 
 ![Screenshot](screenshot.png)
