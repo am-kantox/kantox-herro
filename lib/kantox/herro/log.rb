@@ -30,7 +30,7 @@ module Kantox
 
       SEV_COLORS_DEF = Kantox::Herro.config.log!.colors!
       SEV_COLORS = {
-        'FATAL'   => [SEV_COLORS_DEF.fatal!.label || '01;48;05;196',  SEV_COLORS_DEF.fatal!.text || '01;48;05;196'],
+        'FATAL'   => [SEV_COLORS_DEF.fatal!.label || '01;48;05;196',  SEV_COLORS_DEF.fatal!.text || '01;38;05;174'],
         'INFO'    => [SEV_COLORS_DEF.info!.label || '01;38;05;21',  SEV_COLORS_DEF.info!.text || '00;38;05;110'],
         'WARN'    => [SEV_COLORS_DEF.warn!.label || '01;38;05;226', SEV_COLORS_DEF.warn!.text || '00;38;05;222'],
         'ERROR'   => [SEV_COLORS_DEF.error!.label || '01;38;05;196', SEV_COLORS_DEF.error!.text || '01;38;05;174'],
@@ -154,11 +154,11 @@ module Kantox
       def prepare_for_log what, severity = Logger::ERROR, datetime = nil, skip = BACKTRACE_SKIP
         case what
         when Exception then log_exception what, severity, datetime, skip
-        when Array then what.map { |what| log_with_trace what, severity, datetime, skip }.join($/)
+        when Array then what.map { |w| log_with_trace w, severity, datetime, skip }.join($/)
         else
           Log.severity_int(severity) > MIN_BACKTRACE_LEVEL ?
-            log_string(preen_string(what.to_s), severity, datetime) :
-            log_with_trace(what, severity, datetime, skip)
+            log_with_trace(what.strip.split($/).first, severity, datetime, skip) :
+            log_string(preen_string(what.to_s), severity, datetime)
         end
       end
 
@@ -190,7 +190,7 @@ module Kantox
       end
 
       def preen_string s
-        s.gsub /\s*\R\s*/, just
+        s.gsub(/\s*\R\s*/, just)
       end
 
       def just offset = NESTED_OFFSET, sym = ' '

@@ -5,6 +5,22 @@ AllCops:
     - '*/cache/**'
   RunRailsCops: true
 
+Metrics/MethodLength:
+  Description: 'Method has too many lines.'
+  Enabled: false
+
+Style/ParallelAssignment:
+  Description: 'Do not use parallel assignment.'
+  Enabled: false
+
+Style/Documentation:
+  Description: 'Missing top-level class documentation comment.'
+  Enabled: false
+
+Metrics/LineLength:
+  Description: 'Line is too long.'
+  Enabled: false
+
 Rails/FindBy:
   Description: 'Prefer find_by over where.first.'
   Enabled: false
