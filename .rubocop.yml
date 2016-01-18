@@ -1,0 +1,27 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  Excludes:
+    - '*/cache/**'
+  RunRailsCops: true
+
+Rails/FindBy:
+  Description: 'Prefer find_by over where.first.'
+  Enabled: false
+
+Metrics/ClassLength:
+  Description: 'Avoid classes longer than 100 lines of code.'
+  Enabled: false
+
+# This one reports false positives inside blocks/lambdas
+Lint/NonLocalExitFromIterator:
+  Description: 'Do not use return in iterator to cause non-local exit.'
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Description: 'Name `reduce` block params `|a, e|`.'
+  Enabled: false
+
+Style/RegexpLiteral:
+  EnforcedStyle: 'slashes'
+  AllowInnerSlashes: true
