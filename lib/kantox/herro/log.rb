@@ -155,10 +155,9 @@ module Kantox
         case what
         when Exception then log_exception what, severity, datetime, skip
         when Array then what.map { |w| log_with_trace w, severity, datetime, skip }.join($/)
-        else
-          Log.severity_int(severity) > MIN_BACKTRACE_LEVEL ?
-            log_with_trace(what.strip.split($/).first, severity, datetime, skip) :
-            log_string(preen_string(what.to_s), severity, datetime)
+        when ->(_) { Log.severity_int(severity) > MIN_BACKTRACE_LEVEL }
+          log_with_trace((what.is_a?(String) ? what.strip.split($/).first : what), severity, datetime, skip)
+        else log_string(preen_string(what.to_s), severity, datetime)
         end
       end
 

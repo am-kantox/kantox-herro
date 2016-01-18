@@ -13,6 +13,7 @@ module Kantox
         @info = info || Kantox::LOGGER.format(self)
       end
     end
+
     class Reporter
       STACK = []
       STACK_SIZE = Kantox::Herro.config.base!.stack || 20
@@ -32,7 +33,14 @@ module Kantox
       private :initialize
 
       def self.report cause, status = 200, except = [:all], wrap = true, **extended
-        Kantox::LOGGER.err((inst = Reporter.new(cause, status, wrap, **extended)).cause)
+        inst = Reporter.new(cause, status, wrap, **extended)
+        meth, arg = case status
+                    when 0...300 then [:dbg, cause]
+                    when 300...400 then [:wrn, cause]
+                    when 400...500 then [:err, inst.cause]
+                    else [:ftl, inst.cause]
+                    end
+        Kantox::LOGGER.public_send(meth, *arg)
 
         SPITTERS.each do |name, handlers|
           next unless handlers.active

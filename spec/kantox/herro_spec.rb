@@ -20,6 +20,7 @@ describe Kantox::Herro do
   end
 
   it 'reports errors properly' do
+    expect {Kantox.report 'Hey there'}.not_to raise_error
     expect {Kantox.error 'Hey there'}.to raise_error(Kantox::Herro::ReportedError)
     expect {Kantox.error ArgumentError.new('I am an Argument Error'), user: 'Aleksei', ip: '8.8.8.8'}.to raise_error(Kantox::Herro::ReportedError)
   end
