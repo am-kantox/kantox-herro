@@ -190,7 +190,7 @@ module Kantox
       end
 
       def preen_string s
-        s.gsub(/\s*\R\s*/, just)
+        s.gsub(/#{just}/, $/).gsub(/\s*\R\s*/, just)
       end
 
       def just offset = NESTED_OFFSET, sym = ' '
