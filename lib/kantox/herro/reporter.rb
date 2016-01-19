@@ -35,9 +35,9 @@ module Kantox
       def self.report cause, status = 200, except = [:all], wrap = true, **extended
         inst = Reporter.new(cause, status, wrap, **extended)
         meth, arg = case status
-                    when 0...300 then [:dbg, cause]
-                    when 300...400 then [:wrn, cause]
-                    when 400...500 then [:err, inst.cause]
+                    when 0...400 then [:dbg, cause]
+                    when 400...500 then [:wrn, cause]
+                    when 500...503 then [:err, inst.cause]
                     else [:ftl, inst.cause]
                     end
         Kantox::LOGGER.public_send(meth, *arg)
@@ -66,9 +66,10 @@ module Kantox
     end
   end
 
-  def self.report cause, except = [:all], **extended
-    Kantox::Herro::Reporter.report cause, 200, except, **extended
+  def self.report cause, status = 200, except = [:all], **extended
+    Kantox::Herro::Reporter.report cause, status, except, **extended
   end
+
   def self.error cause, status = 503, except = [:all], **extended
     Kantox::Herro::Reporter.error cause, status, except, **extended
   end
