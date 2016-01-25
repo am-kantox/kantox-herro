@@ -1,9 +1,11 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  Excludes:
+  Exclude:
     - '*/cache/**'
-  RunRailsCops: true
+
+Rails:
+  Enabled: true
 
 Metrics/MethodLength:
   Description: 'Method has too many lines.'

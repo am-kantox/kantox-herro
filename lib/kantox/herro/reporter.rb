@@ -26,7 +26,7 @@ module Kantox
         @cause =  case cause
                   when Exception then cause
                   when String then DEFAULT_ERROR.new(cause)
-                  else DEFAULT_ERROR.new("#{cause}")
+                  else DEFAULT_ERROR.new(cause.to_s)
                   end
         @cause = ReportedError.new("Error ##{status} :: “#{@cause.message}”", @cause, status, **extended) if wrap
       end
@@ -50,7 +50,19 @@ module Kantox
           #    sender: 'error_class'
           #    message: 'error_message'
           begin
-            instance_eval "#{handlers.signature}('#{handlers.sender}' => '#{inst.cause.class}', '#{handlers.message}' => \%Q{#{inst.cause.message}})"
+            params = extended.merge(
+              :type => meth,
+              :cause => cause,
+              :wrap => inst,
+              :backtrace => caller,
+              (handlers.sender || 'sender').to_sym => inst.cause.class.name,
+              (handlers.message || 'message').to_sym => inst.cause.message
+            ).reject do |_, v|
+              v.nil? || v == 'nil'
+            end
+            method, target = handlers.signature.reverse.split(/\.|::/, 2).map(&:reverse)
+            (target || 'Kernel').constantize.send(method, **params)
+
             Kantox::LOGGER.debug "Reported “«#{inst.cause.message}»” to «#{name}»"
           rescue => e
             Kantox::LOGGER.debug ReportedError.new("Problem reporting “«#{inst.cause.message}»” to «#{name}»", e, extended)
