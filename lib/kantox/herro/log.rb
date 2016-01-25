@@ -82,6 +82,8 @@ module Kantox
           end
         "
       end
+      alias_method :rack, :debug
+
       alias_method :ftl, :fatal
       alias_method :wrn, :warn
       alias_method :inf, :info

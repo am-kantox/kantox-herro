@@ -28,7 +28,7 @@ module Kantox
       Thread.new do
         loop do
           begin
-            Kantox::LOGGER.warn @rp.read_nonblock(MAXREADLEN)
+            Kantox::LOGGER.rack @rp.read_nonblock(MAXREADLEN)
           rescue IO::WaitReadable
             IO.select([@rp])
             retry
